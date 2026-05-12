@@ -4,7 +4,7 @@ from presidio_analyzer.nlp_engine import NlpEngineProvider
 
 def build_vietnamese_analyzer() -> AnalyzerEngine:
     """
-    TODO: Xây dựng AnalyzerEngine với các recognizer tùy chỉnh cho VN.
+    Xây dựng AnalyzerEngine với các recognizer tùy chỉnh cho VN.
     """
 
     # --- TASK 2.2.1 ---

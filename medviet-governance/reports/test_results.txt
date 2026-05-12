@@ -1,7 +1,7 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.12.0, pytest-9.0.3, pluggy-1.6.0 -- /home/minhk/Day24-Track02-Lab-Assignment/medviet-governance/.venv/bin/python
+platform linux -- Python 3.12.0, pytest-9.0.3, pluggy-1.6.0 -- E:\Nam4\vinai\lab_thuc_hanh\lab24\Day24-Track02-Lab-Assignment\medviet-governance\.venv\Scripts\python.exe
 cachedir: .pytest_cache
-rootdir: /home/minhk/Day24-Track02-Lab-Assignment/medviet-governance
+rootdir: E:\Nam4\vinai\lab_thuc_hanh\lab24\Day24-Track02-Lab-Assignment\medviet-governance
 plugins: Faker-40.15.0, anyio-4.13.0
 collecting ... collected 6 items
 
