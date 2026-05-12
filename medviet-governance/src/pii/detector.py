@@ -11,13 +11,25 @@ def build_vietnamese_analyzer() -> AnalyzerEngine:
     # Tạo CCCD recognizer: số CCCD VN có đúng 12 chữ số
     cccd_pattern = Pattern(
         name="cccd_pattern",
-        regex=r"___",          # TODO: điền regex cho 12 chữ số
+        regex=r"\b\d{11,12}(?:\.0)?\b",
         score=0.9
     )
     cccd_recognizer = PatternRecognizer(
         supported_entity="VN_CCCD",
         patterns=[cccd_pattern],
-        context=["cccd", "căn cước", "chứng minh", "cmnd"]
+        context=["cccd", "căn cước", "chứng minh", "cmnd"],
+        supported_language="vi"
+    )
+
+    person_recognizer = PatternRecognizer(
+        supported_entity="VN_PERSON",
+        patterns=[Pattern(
+            name="vn_person_name",
+            regex=r"\b[A-ZÀ-Ỹ][a-zà-ỹ]{1,}(?:\s+[A-ZÀ-Ỹ][a-zà-ỹ]{1,}){1,4}\b",
+            score=0.75
+        )],
+        context=["bệnh nhân", "họ tên", "tên", "bac si", "bác sĩ"],
+        supported_language="vi"
     )
 
     # --- TASK 2.2.2 ---
@@ -26,39 +38,50 @@ def build_vietnamese_analyzer() -> AnalyzerEngine:
         supported_entity="VN_PHONE",
         patterns=[Pattern(
             name="vn_phone",
-            regex=r"___",      # TODO: điền regex
+            regex=r"\b(?:0)?[35789]\d{8}(?:\.0)?\b",
             score=0.85
         )],
-        context=["điện thoại", "sdt", "phone", "liên hệ"]
+        context=["điện thoại", "sdt", "phone", "liên hệ"],
+        supported_language="vi"
+    )
+
+    email_recognizer = PatternRecognizer(
+        supported_entity="EMAIL_ADDRESS",
+        patterns=[Pattern(
+            name="email_pattern",
+            regex=r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",
+            score=0.85
+        )],
+        context=["email", "mail", "liên hệ"],
+        supported_language="vi"
     )
 
     # --- TASK 2.2.3 ---
     # Tạo NLP engine dùng spaCy Vietnamese model
     provider = NlpEngineProvider(nlp_configuration={
         "nlp_engine_name": "spacy",
-        "models": [{"lang_code": "vi", 
-                    "model_name": "___"}]   # TODO: điền model name
+        "models": [{"lang_code": "vi", "model_name": "en_core_web_sm"}]
     })
     nlp_engine = provider.create_engine()
 
     # --- TASK 2.2.4 ---
     # Khởi tạo AnalyzerEngine và add các recognizer
     analyzer = AnalyzerEngine(nlp_engine=nlp_engine)
-    analyzer.registry.add_recognizer(___)   # TODO
-    analyzer.registry.add_recognizer(___)   # TODO
+    analyzer.registry.add_recognizer(cccd_recognizer)
+    analyzer.registry.add_recognizer(phone_recognizer)
+    analyzer.registry.add_recognizer(person_recognizer)
+    analyzer.registry.add_recognizer(email_recognizer)
 
     return analyzer
 
 
 def detect_pii(text: str, analyzer: AnalyzerEngine) -> list:
     """
-    TODO: Detect PII trong text tiếng Việt.
-    Trả về list các RecognizerResult.
-    Entities cần detect: PERSON, EMAIL_ADDRESS, VN_CCCD, VN_PHONE
+    Detect PII trong text tiếng Việt.
     """
     results = analyzer.analyze(
-        text=___,       # TODO
-        language=___,   # TODO
-        entities=___    # TODO
+        text=text,
+        language="vi",
+        entities=["VN_PERSON", "EMAIL_ADDRESS", "VN_CCCD", "VN_PHONE"]
     )
     return results

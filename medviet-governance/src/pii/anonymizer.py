@@ -1,5 +1,6 @@
 # src/pii/anonymizer.py
 import pandas as pd
+import random
 from presidio_anonymizer import AnonymizerEngine
 from presidio_anonymizer.entities import OperatorConfig
 from faker import Faker
@@ -27,26 +28,35 @@ class MedVietAnonymizer:
         if not results:
             return text
 
-        # TODO: implement operators dict dựa trên strategy
         operators = {}
 
         if strategy == "replace":
             operators = {
-                "PERSON": OperatorConfig("replace", 
+                "VN_PERSON": OperatorConfig("replace", 
                           {"new_value": fake.name()}),
                 "EMAIL_ADDRESS": OperatorConfig("replace", 
-                                 {"new_value": ___}),   # TODO: fake email
+                                 {"new_value": fake.email()}),
                 "VN_CCCD": OperatorConfig("replace", 
-                           {"new_value": ___}),          # TODO: fake CCCD
+                           {"new_value": "".join(str(random.randint(0, 9)) for _ in range(12))}),
                 "VN_PHONE": OperatorConfig("replace", 
-                            {"new_value": ___}),         # TODO: fake phone
+                            {"new_value": f"0{random.choice([3,5,7,8,9])}{''.join(str(random.randint(0, 9)) for _ in range(8))}"}),
             }
         elif strategy == "mask":
-            # TODO: implement masking
-            pass
+            operators = {
+                "VN_PERSON": OperatorConfig("mask", {"chars_to_mask": 100, "from_end": False, "masking_char": "*"}),
+                "EMAIL_ADDRESS": OperatorConfig("mask", {"chars_to_mask": 100, "from_end": False, "masking_char": "*"}),
+                "VN_CCCD": OperatorConfig("mask", {"chars_to_mask": 100, "from_end": False, "masking_char": "*"}),
+                "VN_PHONE": OperatorConfig("mask", {"chars_to_mask": 100, "from_end": False, "masking_char": "*"}),
+            }
         elif strategy == "hash":
-            # TODO: implement hashing dùng sha256
-            pass
+            operators = {
+                "VN_PERSON": OperatorConfig("hash", {"hash_type": "sha256"}),
+                "EMAIL_ADDRESS": OperatorConfig("hash", {"hash_type": "sha256"}),
+                "VN_CCCD": OperatorConfig("hash", {"hash_type": "sha256"}),
+                "VN_PHONE": OperatorConfig("hash", {"hash_type": "sha256"}),
+            }
+        else:
+            return text
 
         anonymized = self.anonymizer.anonymize(
             text=text,
@@ -65,8 +75,23 @@ class MedVietAnonymizer:
         """
         df_anon = df.copy()
 
-        # TODO: Xử lý từng cột PII
-        # Gợi ý: dùng df.apply() hoặc list comprehension
+        for col in ["ho_ten", "dia_chi", "email"]:
+            if col in df_anon.columns:
+                df_anon[col] = df_anon[col].astype(str).apply(
+                    lambda v: self.anonymize_text(v, strategy="replace")
+                )
+
+        if "cccd" in df_anon.columns:
+            df_anon["cccd"] = [
+                "".join(str(random.randint(0, 9)) for _ in range(12))
+                for _ in range(len(df_anon))
+            ]
+
+        if "so_dien_thoai" in df_anon.columns:
+            df_anon["so_dien_thoai"] = [
+                f"0{random.choice([3,5,7,8,9])}{''.join(str(random.randint(0, 9)) for _ in range(8))}"
+                for _ in range(len(df_anon))
+            ]
 
         return df_anon
 

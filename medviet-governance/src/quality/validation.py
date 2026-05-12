@@ -21,32 +21,32 @@ def build_patient_expectation_suite() -> ExpectationSuite:
 
     # 2. TODO: cccd phải có đúng 12 ký tự
     validator.expect_column_value_lengths_to_equal(
-        column=___,
-        value=___
+        column="cccd",
+        value=12
     )
 
     # 3. TODO: ket_qua_xet_nghiem phải trong khoảng [0, 50]
     validator.expect_column_values_to_be_between(
-        column=___,
-        min_value=___,
-        max_value=___
+        column="ket_qua_xet_nghiem",
+        min_value=0,
+        max_value=50
     )
 
     # 4. TODO: benh phải thuộc danh sách hợp lệ
     valid_conditions = ["Tiểu đường", "Huyết áp cao", "Tim mạch", "Khỏe mạnh"]
     validator.expect_column_values_to_be_in_set(
-        column=___,
-        value_set=___
+        column="benh",
+        value_set=valid_conditions
     )
 
     # 5. TODO: email phải match regex pattern
     validator.expect_column_values_to_match_regex(
         column="email",
-        regex=r"___"    # TODO: email regex
+        regex=r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
     )
 
     # 6. TODO: Không được có duplicate patient_id
-    validator.expect_column_values_to_be_unique(column=___)
+    validator.expect_column_values_to_be_unique(column="patient_id")
 
     validator.save_expectation_suite()
     return suite
@@ -69,12 +69,24 @@ def validate_anonymized_data(filepath: str) -> dict:
 
     # Check 1: Không còn CCCD gốc dạng số thuần túy
     # (sau anonymization, cccd phải là fake hoặc masked)
-    # TODO: implement check
+    if df["cccd"].astype(str).str.fullmatch(r"\d{12}", na=False).any():
+        results["success"] = False
+        results["failed_checks"].append("cccd_contains_raw_12_digit_values")
 
     # Check 2: Không có null values trong các cột quan trọng
-    # TODO: implement check
+    required_cols = ["patient_id", "benh", "ket_qua_xet_nghiem", "cccd", "so_dien_thoai"]
+    null_counts = df[required_cols].isnull().sum()
+    bad_nulls = [col for col, cnt in null_counts.items() if cnt > 0]
+    if bad_nulls:
+        results["success"] = False
+        results["failed_checks"].append(f"null_values_found:{','.join(bad_nulls)}")
 
     # Check 3: Số rows phải bằng original
-    # TODO: implement check
+    original_rows = len(pd.read_csv("data/raw/patients_raw.csv"))
+    if len(df) != original_rows:
+        results["success"] = False
+        results["failed_checks"].append(
+            f"row_count_mismatch:{len(df)}!={original_rows}"
+        )
 
     return results
